@@ -1,3 +1,5 @@
+#pragma once
+
 #include <linux/fs.h>
 #include <asm/segment.h>
 #include <asm/uaccess.h>

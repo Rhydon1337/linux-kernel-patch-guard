@@ -2,19 +2,24 @@
 #include <linux/moduleparam.h>
 #include <linux/init.h>
 #include <linux/kernel.h>   
- 
+
+#include "hash.h"
+
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Rhydon");
- 
+
 static int driver_init(void)
 {	
-	printk(KERN_ALERT "hello...\n");
+	char* s = "hello";
+	char* md5 = get_md5(s, strlen(s));
+	print_md5(md5);
+	printk(KERN_INFO "hello...\n");
 	return 0;
 }
  
 static void driver_exit(void)
 {
-	printk(KERN_WARNING "bye ...\n");
+	printk(KERN_INFO "bye ...\n");
 }
 
 module_init(driver_init);
