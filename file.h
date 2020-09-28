@@ -14,3 +14,5 @@ int file_read(struct file *file, unsigned long long offset, unsigned char *data,
 int file_write(struct file *file, unsigned long long offset, unsigned char *data, unsigned int size);
 
 int file_sync(struct file *file);
+
+size_t get_file_size(const char *path);

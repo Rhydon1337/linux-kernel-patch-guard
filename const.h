@@ -1,0 +1,1 @@
+#define DEPMOD_PATH "/sbin/depmod"
