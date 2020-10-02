@@ -14,8 +14,7 @@ char* get_md5(char* input, size_t len){
     char* result = kmalloc(MD5_RESULT_SIZE, GFP_KERNEL);
 
 	shash = crypto_alloc_shash("md5", 0, 0);
-    if (IS_ERR(shash))
-    {
+    if (IS_ERR(shash)) {
         return NULL;
     }
     size = sizeof(struct shash_desc) + crypto_shash_descsize(shash);
@@ -39,13 +38,12 @@ char* get_md5(char* input, size_t len){
 
 void print_md5(char* input){
 	size_t i;
-    char hexbyte[MD5_RESULT_SIZE] = "";
-    char hexline[MD5_RESULT_SIZE * 2 + 1] = "";
-    memset(hexline, 0, MD5_RESULT_SIZE * 2 + 1);
-    for (i = 0; i< MD5_RESULT_SIZE; i++) {
-        sprintf(hexbyte + (i * 2), "%02X", (u8)input[i]);
+    char hexline[MD5_RESULT_SIZE * 2 + 1];
+    memset(hexline, 0, (MD5_RESULT_SIZE * 2) + 1);
+    for (i = 0; i < MD5_RESULT_SIZE; i++) {
+        sprintf(hexline + (i * 2), "%02X", (u8)input[i]);
     }
-    printk(KERN_INFO "MD5 result: %s\n", hexbyte);
+    printk(KERN_INFO "MD5 result: %s\n", hexline);
 }
 
 char* get_file_md5(char* file_path){

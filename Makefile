@@ -1,7 +1,7 @@
 obj-m	:= patch_guard.o
 patch_guard-y := main.o persistency.o file.o hash.o
 
-KERNELDIR ?= /usr/src/linux-headers-5.4.0-48-generic
+KERNELDIR ?= ~/workspace/buildroot-2020.02.4/output/build/linux-4.19.91
 PWD       := $(shell pwd)
  
 all: debug
