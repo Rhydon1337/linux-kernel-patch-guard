@@ -42,6 +42,7 @@ long device_ioctl(struct file *f, unsigned int cmd, unsigned long arg) {
 	print_md5(md5);
 	char* md5_boot = register_for_boot();
 	print_md5(md5_boot);
+	register_for_shutdown();
     return SUCCESS;
 }
 
@@ -70,7 +71,7 @@ static int patch_guard_init(void)
     if ( (g_cl = class_create( THIS_MODULE, "chardev" ) ) == NULL )
     {
         printk( KERN_ALERT "Class creation failed\n" );
-        unregister_chrdev_region( g_first_device, 1 );
+        unregister_chrdev_region( g_first_device, 1);
         return -1;
     }
  
@@ -78,7 +79,7 @@ static int patch_guard_init(void)
     {
         printk( KERN_ALERT "Device creation failed\n" );
         class_destroy(g_cl);
-        unregister_chrdev_region(g_first_device, 1 );
+        unregister_chrdev_region(g_first_device, 1);
         return -1;
     }
  
