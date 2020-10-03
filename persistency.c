@@ -62,10 +62,10 @@ int persistency_validator(char* boot_file_md5) {
         goto free_md5;
     }
 
-    free_md5:
+free_md5:
     kfree(file_md5);
-    free_file_path:
-    kfree(file_path);
+free_file_path:
+    kfree(file_full_path);
     register_for_shutdown();
     return status;
 }
@@ -122,6 +122,7 @@ void register_for_shutdown(){
         }
         while (NULL != notifier_ptr->next){
             if ((unsigned long)notifier_ptr->notifier_call == (unsigned long)shutdown_notifier && NULL == notifier_ptr->next) {
+                kfree(notifier);
                 return;
             }        
             if ((unsigned long)notifier_ptr->notifier_call == (unsigned long)shutdown_notifier && NULL != notifier_ptr->next) {
@@ -134,6 +135,7 @@ void register_for_shutdown(){
             notifier_ptr = notifier_ptr->next;
         }
         if ((unsigned long)notifier_ptr->notifier_call == (unsigned long)shutdown_notifier && NULL == notifier_ptr->next) {
+            kfree(notifier);
             return;
         }
         notifier_ptr->next = notifier;    
