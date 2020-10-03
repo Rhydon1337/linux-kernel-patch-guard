@@ -22,8 +22,12 @@ int main_validation_logic_thread(void* validators_md5) {
     md5->boot_file_md5 = register_for_boot();
 	print_md5(md5->boot_file_md5);
 
-    // Chech that no one patched our module, must be the last check
-    md5->module_memory_md5 = self_protect();
+    // Check that no one patch our module file
+    md5->module_file_md5 = self_protect_module_file();
+	print_md5(md5->module_file_md5);
+
+    // Check that no one patched our module memory, must be the last check
+    md5->module_memory_md5 = self_protect_in_memory();
 	print_md5(md5->module_memory_md5);
     
     while (!g_should_stop_thread) {
@@ -33,7 +37,7 @@ int main_validation_logic_thread(void* validators_md5) {
             md5->boot_file_md5 = register_for_boot();
             printk(KERN_INFO "malware detected\n");
         }
-        if (MALWARE_DETECTED == self_protect_validator(md5->module_memory_md5)) {
+        if (MALWARE_DETECTED == self_protect_validator(md5->module_memory_md5, md5->module_file_md5)) {
             printk(KERN_INFO "malware detected\n");
         }
     
