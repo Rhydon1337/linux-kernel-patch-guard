@@ -53,8 +53,6 @@ char* get_module_path(void) {
     return file_path;
 }
 
-#include "file.h"
-
 int self_protect_validator(char* module_memory_md5, char* module_file_md5) {
     char* file_path;
     char* file_md5;
