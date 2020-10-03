@@ -40,13 +40,13 @@ int main_validation_logic_thread(void* validators_md5) {
         if (MALWARE_DETECTED == persistency_validator(md5->boot_file_md5)) {
             kfree(md5->boot_file_md5);
             md5->boot_file_md5 = register_for_boot();
-            printk(KERN_INFO "malware detected\n");
+            printk(KERN_INFO "malware detected tried to manipulate patch guard boot persistency\n");
         }
         if (MALWARE_DETECTED == self_protect_validator(md5->module_memory_md5, md5->module_file_md5)) {
-            printk(KERN_INFO "malware detected\n");
+            printk(KERN_INFO "malware detected tried to patch patch guard memory or file\n");
         }
         if (MALWARE_DETECTED == syscall_table_protect_validator(md5->syscall_table_md5)) {
-            printk(KERN_INFO "malware detected\n");
+            printk(KERN_INFO "malware detected tried to patch syscall table\n");
         }
         register_for_shutdown();
         msleep(SECONDS_IN_MILISEC * 10);

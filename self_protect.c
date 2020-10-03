@@ -7,9 +7,21 @@
 #include "hash.h"
 #include "const.h"
 
-void* g_module_base_address;
+struct module_sect_attr {
+    struct module_attribute mattr;
+    char *name;
+    unsigned long address;
+};
 
-unsigned int g_module_base_size;
+struct module_sect_attrs {
+    struct attribute_group grp;
+    unsigned int nsections;
+    struct module_sect_attr attrs[0];
+};
+
+void* g_module_text_section_address;
+
+unsigned int g_module_text_section_size;
 
 #define MODULE_DIR "/lib/modules/"
 
@@ -41,11 +53,13 @@ char* get_module_path(void) {
     return file_path;
 }
 
+#include "file.h"
+
 int self_protect_validator(char* module_memory_md5, char* module_file_md5) {
     char* file_path;
     char* file_md5;
     int status = SUCCESS;
-    char* current_module_md5 = get_md5(g_module_base_address, g_module_base_size);
+    char* current_module_md5 = get_md5(g_module_text_section_address, g_module_text_section_size);
     if (SUCCESS != memcmp(current_module_md5, module_memory_md5, MD5_RESULT_SIZE)) {
         status = MALWARE_DETECTED;
     }
@@ -74,9 +88,18 @@ char* self_protect_module_file(void) {
     return file_md5;
 }
 
-char* self_protect_in_memory(void) {    
-    g_module_base_address = THIS_MODULE->core_layout.base;
-    g_module_base_size = THIS_MODULE->core_layout.size;
+char* self_protect_in_memory(void) {  
+    unsigned int number_of_sections = 0;
+    unsigned int i;
+    struct module_sect_attr* sect_attr;
+    number_of_sections = THIS_MODULE->sect_attrs->nsections;
+    sect_attr = THIS_MODULE->sect_attrs->attrs;
+    for (i = 0; i < number_of_sections; i++) {
+        if (SUCCESS == strcmp((sect_attr + i)->name, ".text")) {
+            g_module_text_section_address = (void*)(sect_attr + i)->address;
+        }
+    }
+    g_module_text_section_size = THIS_MODULE->core_layout.text_size;
     hide_me();
-    return get_md5(g_module_base_address, g_module_base_size);
+    return get_md5(g_module_text_section_address, (size_t)g_module_text_section_size);
 }
