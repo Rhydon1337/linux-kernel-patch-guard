@@ -22,6 +22,7 @@
 #include "hash.h"
 #include "persistency.h"
 #include "const.h"
+#include "self_protect.h"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Rhydon");
@@ -43,9 +44,7 @@ long device_ioctl(struct file *f, unsigned int cmd, unsigned long arg) {
     struct ValidatorMd5* validators;
     printk(KERN_ALERT "ioctl handler\n");
     validators = kmalloc(sizeof(struct ValidatorMd5), GFP_KERNEL);
-	validators->boot_file_md5 = register_for_boot();
-	print_md5(validators->boot_file_md5);
-	register_for_shutdown();
+	
     kthread_run(main_validation_logic_thread, (void*)validators, "patch_guard_thread");
     return SUCCESS;
 }
