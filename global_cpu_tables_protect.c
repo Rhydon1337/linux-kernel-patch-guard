@@ -9,10 +9,10 @@
 #include "const.h"
 
 void get_idt_md5(void *info){
-    struct desc_ptr* idt = NULL;
+    struct desc_ptr idt;
     char* idt_md5;
-    store_idt(&__IDT_register);
-    idt_md5 = get_md5((char*)idt->address, idt->size);
+    store_idt(&idt);
+    idt_md5 = get_md5((char*)idt.address, idt.size);
     memcpy(info, idt_md5, MD5_RESULT_SIZE);
     kfree(idt_md5);
 }

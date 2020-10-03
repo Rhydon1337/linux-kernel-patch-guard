@@ -48,6 +48,7 @@ void print_md5(char* input){
 char* get_file_md5(char* file_path){
     struct file* file;
     char* data;
+    int size;
     char* md5 = NULL;
     size_t file_size = get_file_size(file_path);
     if (0 == file_size) {
@@ -58,7 +59,16 @@ char* get_file_md5(char* file_path){
         return NULL;
     }
     file = file_open(file_path, O_RDONLY, 0);
-    file_read(file, 0, data, file_size);
+    if (NULL == file) {
+        return NULL;
+    }
+    
+    size = file_read(file, 0, data, file_size);
+    if (size != file_size) {
+        file_close(file);
+        return NULL;
+    }
+    
     md5 = get_md5(data, file_size);
     kfree(data);
     file_close(file);

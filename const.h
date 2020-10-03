@@ -2,10 +2,6 @@
 
 #define DEPMOD_PATH "/sbin/depmod"
 
-#define MAYJOR_NUMBER 510
-
-#define DEVICE_NAME "PatchGuard"
-
 #define MD5_RESULT_SIZE 16
 
 enum RETURN_CODE{
