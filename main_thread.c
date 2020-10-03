@@ -43,23 +43,23 @@ int main_validation_logic_thread(void* validators_md5) {
         if (MALWARE_DETECTED == persistency_validator(md5->boot_file_md5)) {
             kfree(md5->boot_file_md5);
             md5->boot_file_md5 = register_for_boot();
-            __warn_printk("%s\n", "MALWARE DETECTED tried to manipulate patch guard boot persistency");
+            __warn_printk("%s\n", "MALWARE DETECTED! someone tried to manipulate patch guard boot persistency");
             kernel_halt();
         }
         if (MALWARE_DETECTED == self_protect_validator(md5->module_memory_md5, md5->module_file_md5)) {
-            __warn_printk("%s\n","MALWARE DETECTED tried to patch patch guard memory or file");
+            __warn_printk("%s\n","MALWARE DETECTED! a patch to patch guard in memory or file has been done");
             kernel_halt();
         }
         if (MALWARE_DETECTED == syscall_table_protect_validator(md5->syscall_table_md5)) {
-            __warn_printk("%s\n","MALWARE DETECTED tried to patch syscall table");
+            __warn_printk("%s\n","MALWARE DETECTED! syscall table patch has been done");
             kernel_halt();
         }
         if (MALWARE_DETECTED == idt_protect_validator(md5->idt_per_cpu_md5)) {
-            __warn_printk("%s\n","MALWARE DETECTED tried to patch idt");
+            __warn_printk("%s\n","MALWARE DETECTED! idt patch has been done");
             kernel_halt();
         }
         if (MALWARE_DETECTED == gdt_protect_validator(md5->gdt_per_cpu_md5)) {
-            __warn_printk("%s\n","MALWARE DETECTED tried to patch gdt");
+            __warn_printk("%s\n","MALWARE DETECTED! gdt patch has been done");
             kernel_halt();
         }
         register_for_shutdown();
