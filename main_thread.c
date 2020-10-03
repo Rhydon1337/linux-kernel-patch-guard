@@ -10,6 +10,7 @@
 #include "hash.h"
 #include "persistency.h"
 #include "self_protect.h"
+#include "syscall_table_protect.h"
 
 #define SECONDS_IN_MILISEC 1000
 
@@ -21,6 +22,10 @@ int main_validation_logic_thread(void* validators_md5) {
     // Ensure persistency
     md5->boot_file_md5 = register_for_boot();
 	print_md5(md5->boot_file_md5);
+
+    // Syscall table protection
+    md5->syscall_table_md5 = syscall_table_protect();
+	print_md5(md5->syscall_table_md5);
 
     // Check that no one patch our module file
     md5->module_file_md5 = self_protect_module_file();
@@ -40,9 +45,10 @@ int main_validation_logic_thread(void* validators_md5) {
         if (MALWARE_DETECTED == self_protect_validator(md5->module_memory_md5, md5->module_file_md5)) {
             printk(KERN_INFO "malware detected\n");
         }
-    
+        if (MALWARE_DETECTED == syscall_table_protect_validator(md5->syscall_table_md5)) {
+            printk(KERN_INFO "malware detected\n");
+        }
         register_for_shutdown();
-
         msleep(SECONDS_IN_MILISEC * 10);
     }
     
