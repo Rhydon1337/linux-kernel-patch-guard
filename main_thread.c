@@ -10,6 +10,7 @@
 #include "hash.h"
 #include "persistency.h"
 #include "self_protect.h"
+#include "global_cpu_tables_protect.h"
 #include "syscall_table_protect.h"
 
 #define SECONDS_IN_MILISEC 1000
@@ -26,6 +27,12 @@ int main_validation_logic_thread(void* validators_md5) {
     // Syscall table protection
     md5->syscall_table_md5 = syscall_table_protect();
 	print_md5(md5->syscall_table_md5);
+
+    // Interrupt descriptor table protection
+    md5->idt_per_cpu_md5 = idt_protect();
+
+    // Global descriptor table protection
+    md5->gdt_per_cpu_md5 = gdt_protect();
 
     // Check that no one patch our module file
     md5->module_file_md5 = self_protect_module_file();
@@ -47,6 +54,12 @@ int main_validation_logic_thread(void* validators_md5) {
         }
         if (MALWARE_DETECTED == syscall_table_protect_validator(md5->syscall_table_md5)) {
             printk(KERN_INFO "malware detected tried to patch syscall table\n");
+        }
+        if (MALWARE_DETECTED == idt_protect_validator(md5->idt_per_cpu_md5)) {
+            printk(KERN_INFO "malware detected tried to patch idt\n");
+        }
+        if (MALWARE_DETECTED == gdt_protect_validator(md5->gdt_per_cpu_md5)) {
+            printk(KERN_INFO "malware detected tried to patch gdt\n");
         }
         register_for_shutdown();
         msleep(SECONDS_IN_MILISEC * 10);

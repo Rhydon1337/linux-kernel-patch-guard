@@ -7,8 +7,12 @@
 #include "hash.h"
 #include "const.h"
 
+void* syscall_table = NULL;
+
 char* syscall_table_protect(void) {
-    void* syscall_table = (void *)kallsyms_lookup_name("sys_call_table");
+    if (NULL == syscall_table) {
+        syscall_table = (void *)kallsyms_lookup_name("sys_call_table");
+    }
     // The number of enries are: {Last_syscall_number} * sizeof(unsigned long)
     return get_md5(syscall_table, __NR_rseq * sizeof(unsigned long));
 }
