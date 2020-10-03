@@ -4,8 +4,7 @@
 #include <linux/err.h>
 
 #include "file.h"
-
-#define MD5_RESULT_SIZE 16
+#include "const.h"
 
 char* get_md5(char* input, size_t len){
     struct crypto_shash* shash;

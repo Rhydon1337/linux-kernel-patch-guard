@@ -1,9 +1,6 @@
 #pragma once
-int persistency_validator(char* driver_path);
 
-int persistency_boot_validator(char* driver_path);
-
-int persistency_shutdown_validator(char* driver_path);
+int persistency_validator(char* boot_file_md5);
 
 char* register_for_boot(void);
 

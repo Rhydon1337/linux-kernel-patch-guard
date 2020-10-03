@@ -19,6 +19,8 @@
 
 typedef void (*ksys_sync)(void);
 
+char* BOOT_FILE_MD5 = NULL;
+
 int shutdown_notifier(struct notifier_block *nb, unsigned long action, void *data) {
     char* md5 = register_for_boot();
     if (md5 != NULL) {
@@ -27,9 +29,10 @@ int shutdown_notifier(struct notifier_block *nb, unsigned long action, void *dat
     return NOTIFY_DONE;
 }
 
-char* get_file_name(void){
+char* get_file_path(void){
     int i = 0;
     size_t boot_file_extension_len;
+    char* file_full_path;
     char* file_name = kmalloc(MAX_FILENAME_LENGTH + 1, GFP_KERNEL);
     memset(file_name, 0, MAX_FILENAME_LENGTH + 1);
     boot_file_extension_len = strlen(BOOT_FILE_EXTENSION);
@@ -37,7 +40,34 @@ char* get_file_name(void){
     for (; i < MAX_FILENAME_LENGTH - boot_file_extension_len; ++i){
         file_name[i] = 'a';
     }
-    return file_name;
+    file_full_path = kmalloc(strlen(MODULES_BOOT_CONF_DIR) + strlen(file_name) + 1, GFP_KERNEL);
+    memset(file_full_path, 0, strlen(MODULES_BOOT_CONF_DIR) + strlen(file_name) + 1);
+    memcpy(file_full_path, MODULES_BOOT_CONF_DIR, strlen(MODULES_BOOT_CONF_DIR));
+    memcpy(file_full_path + strlen(MODULES_BOOT_CONF_DIR), file_name, strlen(file_name));
+    kfree(file_name);
+    return file_full_path;
+}
+
+int persistency_validator(char* boot_file_md5) {
+    char* file_full_path = get_file_path();
+    char* file_md5 = get_file_md5(file_full_path);
+    int status = SUCCESS;
+    if (NULL == file_md5) {
+        status = MALWARE_DETECTED;
+        goto free_file_path;
+    }
+
+    if (SUCCESS != memcmp(file_md5, boot_file_md5, MD5_RESULT_SIZE)) {
+        status = MALWARE_DETECTED;
+        goto free_md5;
+    }
+
+    free_md5:
+    kfree(file_md5);
+    free_file_path:
+    kfree(file_path);
+    register_for_shutdown();
+    return status;
 }
 
 char* register_for_boot() {
@@ -45,15 +75,8 @@ char* register_for_boot() {
     char* md5 = NULL;
     char *hargv[] = {DEPMOD_PATH, "-a", NULL};
     char *henvp[] = {"HOME=/", "PATH=/sbin:/bin:/usr/sbin:/usr/bin", NULL};
-    char* file_name = get_file_name();
-    char* file_full_path = kmalloc(strlen(MODULES_BOOT_CONF_DIR) + strlen(file_name) + 1, GFP_KERNEL);
-    memset(file_full_path, 0, strlen(MODULES_BOOT_CONF_DIR) + strlen(file_name) + 1);
-    memcpy(file_full_path, MODULES_BOOT_CONF_DIR, strlen(MODULES_BOOT_CONF_DIR));
-    memcpy(file_full_path + strlen(MODULES_BOOT_CONF_DIR), file_name, strlen(file_name));
-
-    printk("%s\n", file_name);
+    char* file_full_path = get_file_path();
     printk("%s\n", file_full_path);
-    
     file = file_open(file_full_path, O_CREAT | O_RDWR | O_TRUNC, 0);
     if (NULL == file) {
         goto release_resources;
@@ -71,8 +94,8 @@ char* register_for_boot() {
     if (0 != call_usermodehelper(DEPMOD_PATH, hargv, henvp, UMH_WAIT_PROC)) {
         printk("Failed calling depmod\n");
     }
+    BOOT_FILE_MD5 = md5;
 release_resources:
-    kfree(file_name);
     kfree(file_full_path);
     return md5;
 }

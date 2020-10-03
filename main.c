@@ -2,7 +2,10 @@
 #include <linux/moduleparam.h>
 #include <linux/init.h>
 #include <linux/kernel.h>   
+#include <linux/kthread.h>
 #include <linux/version.h>
+#include <linux/gfp.h>
+#include <linux/slab.h>
 
 
 #include <linux/platform_device.h>
@@ -15,6 +18,7 @@
 #include <linux/device.h>
 #include <linux/cdev.h> 
 
+#include "main_thread.h"
 #include "hash.h"
 #include "persistency.h"
 #include "const.h"
@@ -36,13 +40,13 @@ int device_close(struct inode *inode, struct file *file) {
 }
 
 long device_ioctl(struct file *f, unsigned int cmd, unsigned long arg) {
+    struct ValidatorMd5* validators;
     printk(KERN_ALERT "ioctl handler\n");
-	char* hello = "hello";
-	char* md5 = get_md5(hello, strlen(hello));
-	print_md5(md5);
-	char* md5_boot = register_for_boot();
-	print_md5(md5_boot);
+    validators = kmalloc(sizeof(struct ValidatorMd5), GFP_KERNEL);
+	validators->boot_file_md5 = register_for_boot();
+	print_md5(validators->boot_file_md5);
 	register_for_shutdown();
+    kthread_run(main_validation_logic_thread, (void*)validators, "patch_guard_thread");
     return SUCCESS;
 }
 
