@@ -12,6 +12,8 @@ Tested on Linux kernel version: 4.19.91.
 
 Calculate hash of critical data structures and when a change occurs halt the computer with MALWARE DETECTED message.
 
+The module has hiding mechanism for proc fs (/proc/modules) and sysfs (/sys/modules).
+
 The module has self protect mechanism which protects from anyone to patch its binary on the disk or patch the module memory.
 
 The module has persistency mechanism, which utilizes systemd kernel module loading. The module ensures to be the first module to load by manipulating systemd module order method. It will also write itself to the reboot notifier list and it will ensure to be the last one to be called at shutdown or reboot in order to ensure its persistency (by manipulating the reboot notifier list).
