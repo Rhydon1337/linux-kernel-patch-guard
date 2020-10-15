@@ -19,7 +19,7 @@ MODULE_AUTHOR("Rhydon");
 static int patch_guard_init(void)
 {	
 	struct ValidatorMd5* validators;
-	printk(KERN_INFO "hello...\n");
+	printk(KERN_INFO "Hello...\n");
 	validators = kmalloc(sizeof(struct ValidatorMd5), GFP_KERNEL);
     kthread_run(main_validation_logic_thread, (void*)validators, "patch_guard_thread");
 	return SUCCESS;
@@ -27,7 +27,7 @@ static int patch_guard_init(void)
  
 static void patch_guard_exit(void)
 {
-	printk(KERN_INFO "bye ...\n");
+	printk(KERN_INFO "Bye ...\n");
 }
 
 module_init(patch_guard_init);
